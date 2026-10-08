@@ -1,0 +1,50 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class Service extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'service_name',
+        'price_per_unit',
+        'unit_type',
+        'estimated_hours',
+        'tenant_id',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'price_per_unit' => 'decimal:2',
+            'estimated_hours' => 'integer',
+        ];
+    }
+
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    public function promos(): BelongsToMany
+    {
+        return $this->belongsToMany(Promo::class, 'promo_service')->withTimestamps();
+    }
+
+    public function promoFor(float $qty): ?Promo
+    {
+        return $this->promos->first(fn ($promo) => $promo->isValidFor($this->id, $qty, $this->unit_type));
+    }
+
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
+    }
+}
