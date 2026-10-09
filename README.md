@@ -15,7 +15,7 @@
 | No | Nama Lengkap | NIM | Shift Awal | Shift Akhir | Jobdesk / Kontribusi | Link Video Penjelasan |
 |---|---|---|---|---|---|---|
 | 1 | [Nama Lengkap] | [NIM] | [Shift Awal] | [Shift Akhir] | Fondasi, Auth & CRUD Tenants (branch `pika`) | [YouTube/Drive](https://...) |
-| 2 | [Nama Lengkap] | [NIM] | [Shift Awal] | [Shift Akhir] | CRUD Services & Orders, tracking & struk (branch `bahtiar`) | [YouTube/Drive](https://...) |
+| 2 | Bahtiar Rizqi Efendy | H1H024006 | C | A | CRUD Services & Orders, tracking & struk (branch `bahtiar`) | [YouTube/Drive](https://...) |
 | 3 | Apriyudha | H1H024010 | C | A | CRUD Customers & Promos, landing (branch `yudha`) | [YouTube](https://youtu.be/_hEKCiOz2g4) |
 
 ---
