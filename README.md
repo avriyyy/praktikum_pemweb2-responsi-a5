@@ -1,58 +1,106 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+<a href="https://a5.athafa.cloud"><img width="2172" alt="Laundrey" src="docs/logo.png" /></a>
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+# Laundrey
 
-## About Laravel
+Multi-tenant laundry ops: tiap kedai daftar dengan kode resi 3 huruf sendiri (misal `QWP`), data terisolasi per tenant. Pelanggan lacak resi publik, admin kelola transaksi, tarif, file pelanggan, dan tahap pengerjaan.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Cara kerja multi-tenant
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Registrasi (`/register` atau `POST /api/v1/auth/register`): nama laundry + prefix 3 huruf kapital (unik global) + akun admin. Contoh resi: `QWP-20261006-001`.
+- Semua data (services, orders, customers) terfilter `tenant_id`. Cross-tenant return 404.
+- Prefix bisa diganti di Settings, hanya berlaku untuk resi baru.
+- Tracking publik by nomor resi penuh (unik global).
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Permasalahan
 
-## Learning Laravel
+UMKM laundry masih catat manual: pelanggan tanya status berulang, tahapan cucian sulit dilacak, nota hilang dan salah hitung.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Solusi
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- Admin tunggal: counter mencatat order, tahap, tarif, dan file pelanggan
+- Pelanggan tanpa login: dilayani by nama/HP, dilacak by resi publik
+- CRUD pelanggan oleh admin: cari by nama/HP/ID, riwayat + total belanja, cegah duplikat via cek live di form order
+- Kalkulasi harga otomatis (berat × tarif)
+- Alur status: Received → Washing → Drying → Ironing → Ready → Completed
+- Setiap perubahan status tercatat di `order_tracks`
+- Relasi Eloquent: One-to-Many (tenant→users/services/orders, user→orders, order→tracks) + Many-to-Many (promo↔service via `promo_service`)
+- Promo diskon rule-based: nama + persen + minimal qty (kg/pcs) + window tanggal, ditempel ke service dari form service (opsional); order otomatis dapat potongan bila syarat terpenuhi, terlihat di estimasi
+- Desain referensi Linear.app: minimalis, whitespace lega, border subtle, satu aksen indigo `#5E6AD2`
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+## Teknologi
 
-## Agentic Development
+Laravel 13, PHP ≥ 8.4, MySQL/MariaDB (dev default SQLite), Eloquent ORM, Sanctum Bearer Token, Blade, Vite.
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Cara menjalankan
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer install
+cp .env.example .env
+php artisan key:generate
+# MySQL: sesuaikan DB_* di .env. SQLite: biarkan default.
+php artisan migrate --seed
+php artisan serve
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Buka `http://localhost:8000`.
 
-## Contributing
+## Akun pengujian
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+| Role | Email | Password |
+| ---- | ----- | -------- |
+| Admin (platform) | admin@laundrey.com via `/login` | password123 |
+| Tenant (operator kedai) | tenant@laundrey.com via `/login` | password123 |
 
-## Code of Conduct
+Daftar laundry baru via `/register`. Login pelanggan dinonaktifkan: file pelanggan dikelola counter.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## API Documentation
 
-## Security Vulnerabilities
+Base: `/api/v1`. Header wajib `Accept: application/json`. Auth: `Authorization: Bearer <token>`.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+| Method | Endpoint | Keterangan | Auth | Role |
+| ------ | -------- | ---------- | ---- | ---- |
+| POST | /api/v1/auth/register | Registrasi laundry (name+prefix+tenant) | No | Public |
+| POST | /api/v1/auth/login | Login & token (tenant/admin) | No | Public |
+| POST | /api/v1/auth/logout | Logout (hapus token aktif) | Yes | Tenant |
+| GET | /api/v1/services | Daftar layanan (cari=`cari`, paginasi `per_halaman`) | Yes | Tenant |
+| POST | /api/v1/services | Tambah layanan (+promo opsional) | Yes | Tenant |
+| PUT | /api/v1/services/{id} | Update layanan (+promo opsional) | Yes | Tenant |
+| DELETE | /api/v1/services/{id} | Hapus layanan | Yes | Tenant |
+| GET | /api/v1/orders | Daftar transaksi (filter `cari`, `status`, `payment_status`, `per_halaman`) | Yes | Tenant |
+| POST | /api/v1/orders | Buat transaksi + promo otomatis + invoice + track awal | Yes | Tenant |
+| GET | /api/v1/orders/{id} | Detail + tracks + promo | Yes | Tenant |
+| PUT | /api/v1/orders/{id} | Update transaksi | Yes | Tenant |
+| POST | /api/v1/orders/{id}/tracks | Update status + catat track | Yes | Tenant |
+| GET | /api/v1/track/{invoice} | Tracking publik | No | Public |
+| GET | /api/v1/promos | Daftar promo (cari=`cari`) | Yes | Tenant |
+| POST | /api/v1/promos | Buat promo (nama+persen+min qty/unit+tanggal) | Yes | Tenant |
+| GET | /api/v1/promos/{id} | Detail promo | Yes | Tenant |
+| DELETE | /api/v1/promos/{id} | Hapus promo | Yes | Tenant |
 
-## License
+Services, promos, customers: CRUD halaman penuh (tambah/ubah di halaman sendiri, tabel + tombol Edit/Hapus, tanpa inline form).
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Customer CRUD + live lookup (`/customers`, `/customers-lookup`) tersedia di web untuk tenant.
+
+Response sukses: `{sukses:true, pesan, data}`. Error konsisten: 401 token, 403 peran, 404 resi, 422 validasi (`galat`).
+
+## Struktur
+
+- `database/migrations`: tenants, users/services/orders (+tenant_id), order_tracks
+- `app/Models`: Tenant, User (tenant), Service (tenant), Order (tenant, prefix invoice), OrderTrack
+- `app/Models`: User (HasApiTokens, orders, orderTracks), Service (orders), Order (customer, service, tracks), OrderTrack (order, updater)
+- `app/Http/Requests`: Login, Store/Update Service, Store/Update Order, StoreTrack
+- `app/Http/Resources`: Service, Order (nested customer/service/tracks), OrderTrack
+- `app/Http/Controllers/Api/V1`: Auth, Service, Order, Track
+- `app/Http/Middleware/EnsureRole.php` → alias `role`
+- `app/Http/Controllers/Web`: Auth (session), Dashboard, Order, Service, Operation, Track, Customer (CRUD + lookup)
+- `resources/views`: layouts/app, tracking, auth, dashboard, orders, services, operations, customers
+
+## Deployment
+
+Live: [https://a5.athafa.cloud](https://a5.athafa.cloud) (aaPanel, PHP 8.4, MySQL, Nginx, document root `public`, Let's Encrypt).
+
+Set `APP_URL`, `DB_*` MySQL, `php artisan migrate --force`, `npm run build`.
+
+## Video dokumentasi
+
+- Yudha (customers, promos, landing): TODO — isi link video individu.
