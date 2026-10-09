@@ -13,57 +13,35 @@ use App\Http\Controllers\Web\TrackWebController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [TrackWebController::class, 'index'])->name('home');
-
 Route::post('/track', [TrackWebController::class, 'track'])->name('track.search');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthWebController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthWebController::class, 'login']);
-
     Route::get('/register', [AuthWebController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthWebController::class, 'register']);
 });
 
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthWebController::class, 'logout'])->name('logout');
-
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::middleware('role:tenant')->group(function () {
-        Route::get('/orders/{order}/invoice', [OrderWebController::class, 'invoice'])
-            ->name('orders.invoice');
-
-        Route::get('/orders/{order}/invoice.pdf', [OrderWebController::class, 'invoicePdf'])
-            ->name('orders.invoice.pdf');
-
+        Route::get('/orders/{order}/invoice', [OrderWebController::class, 'invoice'])->name('orders.invoice');
+        Route::get('/orders/{order}/invoice.pdf', [OrderWebController::class, 'invoicePdf'])->name('orders.invoice.pdf');
         Route::resource('orders', OrderWebController::class);
-
-        Route::resource('services', ServiceWebController::class)
-            ->except(['show']);
-
-        Route::resource('promos', PromoWebController::class)
-            ->except(['show']);
-
+        Route::resource('services', ServiceWebController::class)->except(['show']);
+        Route::resource('promos', PromoWebController::class)->except(['show']);
         Route::resource('customers', CustomerWebController::class);
-
-        Route::get('/customers-lookup', [CustomerWebController::class, 'lookup'])
-            ->name('customers.lookup');
-
-        Route::put('/settings', [SettingWebController::class, 'update'])
-            ->name('settings.update');
-
-        Route::get('/operations', [OperationWebController::class, 'index'])
-            ->name('operations.index');
-
-        Route::post('/operations/{order}/status', [OperationWebController::class, 'updateStatus'])
-            ->name('operations.status');
+        Route::get('/customers-lookup', [CustomerWebController::class, 'lookup'])->name('customers.lookup');
+        Route::put('/settings', [SettingWebController::class, 'update'])->name('settings.update');
+        Route::get('/operations', [OperationWebController::class, 'index'])->name('operations.index');
+        Route::post('/operations/{order}/status', [OperationWebController::class, 'updateStatus'])->name('operations.status');
     });
 
     Route::middleware('role:admin')->group(function () {
         Route::prefix('admin')->name('admin.')->group(function () {
-            Route::get('/dashboard', [DashboardController::class, 'platform'])
-                ->name('dashboard');
-
+            Route::get('/dashboard', [DashboardController::class, 'platform'])->name('dashboard');
             Route::resource('tenants', TenantWebController::class);
         });
     });
