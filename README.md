@@ -16,7 +16,7 @@
 |---|---|---|---|---|---|---|
 | 1 | [Nama Lengkap] | [NIM] | [Shift Awal] | [Shift Akhir] | Fondasi, Auth & CRUD Tenants (branch `pika`) | [YouTube/Drive](https://...) |
 | 2 | [Nama Lengkap] | [NIM] | [Shift Awal] | [Shift Akhir] | CRUD Services & Orders, tracking & struk (branch `bahtiar`) | [YouTube/Drive](https://...) |
-| 3 | [Nama Lengkap] | [NIM] | [Shift Awal] | [Shift Akhir] | CRUD Customers & Promos, landing, docs & deploy (branch `yudha`) | [YouTube/Drive](https://...) |
+| 3 | Apriyudha | H1H024010 | C | A | CRUD Customers & Promos, landing (branch `yudha`) | [YouTube](https://youtu.be/_hEKCiOz2g4) |
 
 ---
 
