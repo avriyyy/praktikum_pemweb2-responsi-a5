@@ -1,51 +1,78 @@
 <a href="https://a5.athafa.cloud"><img width="2172" alt="Laundrey" src="docs/logo.png" /></a>
 
 # Laundrey
+> Laundry tracking made simple — multi-tenant laundry ops, resi publik tanpa login.
 
-Multi-tenant laundry ops: tiap kedai daftar dengan kode resi 3 huruf sendiri (misal `QWP`), data terisolasi per tenant. Pelanggan lacak resi publik, admin kelola transaksi, tarif, file pelanggan, dan tahap pengerjaan.
+---
 
-## Cara kerja multi-tenant
+## 📌 Informasi Kelompok
+- **Nomor Kelompok:** Kelompok 05
+- **Shift Praktikum:** A
 
-- Registrasi (`/register` atau `POST /api/v1/auth/register`): nama laundry + prefix 3 huruf kapital (unik global) + akun admin. Contoh resi: `QWP-20261006-001`.
-- Semua data (services, orders, customers) terfilter `tenant_id`. Cross-tenant return 404.
-- Prefix bisa diganti di Settings, hanya berlaku untuk resi baru.
-- Tracking publik by nomor resi penuh (unik global).
+---
 
-## Permasalahan
+## 👥 Anggota Kelompok
+| No | Nama Lengkap | NIM | Shift Awal | Shift Akhir | Jobdesk / Kontribusi | Link Video Penjelasan |
+|---|---|---|---|---|---|---|
+| 1 | [Nama Lengkap] | [NIM] | [Shift Awal] | [Shift Akhir] | Fondasi, Auth & CRUD Tenants (branch `pika`) | [YouTube/Drive](https://...) |
+| 2 | [Nama Lengkap] | [NIM] | [Shift Awal] | [Shift Akhir] | CRUD Services & Orders, tracking & struk (branch `bahtiar`) | [YouTube/Drive](https://...) |
+| 3 | [Nama Lengkap] | [NIM] | [Shift Awal] | [Shift Akhir] | CRUD Customers & Promos, landing, docs & deploy (branch `yudha`) | [YouTube/Drive](https://...) |
 
-UMKM laundry masih catat manual: pelanggan tanya status berulang, tahapan cucian sulit dilacak, nota hilang dan salah hitung.
+---
 
-## Solusi
+## 📖 Deskripsi Aplikasi
+Laundrey adalah aplikasi laundry multi-tenant: tiap kedai daftar dengan kode resi 3 huruf sendiri (misal `QWP`), data terisolasi per tenant (cross-tenant return 404). Pelanggan lacak resi publik tanpa login, operator kelola transaksi, tarif, file pelanggan, dan tahap pengerjaan.
 
-- Admin tunggal: counter mencatat order, tahap, tarif, dan file pelanggan
-- Pelanggan tanpa login: dilayani by nama/HP, dilacak by resi publik
-- CRUD pelanggan oleh admin: cari by nama/HP/ID, riwayat + total belanja, cegah duplikat via cek live di form order
-- Kalkulasi harga otomatis (berat × tarif)
-- Alur status: Received → Washing → Drying → Ironing → Ready → Completed
-- Setiap perubahan status tercatat di `order_tracks`
-- Relasi Eloquent: One-to-Many (tenant→users/services/orders, user→orders, order→tracks) + Many-to-Many (promo↔service via `promo_service`)
-- Promo diskon rule-based: nama + persen + minimal qty (kg/pcs) + window tanggal, ditempel ke service dari form service (opsional); order otomatis dapat potongan bila syarat terpenuhi, terlihat di estimasi
-- Desain referensi Linear.app: minimalis, whitespace lega, border subtle, satu aksen indigo `#5E6AD2`
+**Permasalahan:** UMKM laundry masih catat manual — pelanggan tanya status berulang, tahapan cucian sulit dilacak, nota hilang dan salah hitung.
 
-## Teknologi
+**Solusi:** counter mencatat order + tahap + tarif + file pelanggan dalam satu admin; pelanggan dilayani by nama/HP dan melacak by resi publik; kalkulasi harga otomatis (berat × tarif); promo diskon rule-based otomatis; setiap perubahan status tercatat di `order_tracks`.
 
-Laravel 13, PHP ≥ 8.4, MySQL/MariaDB (dev default SQLite), Eloquent ORM, Sanctum Bearer Token, Blade, Vite.
+---
 
-## Cara menjalankan
+## ⚙️ Penjelasan Teknis
+### 1. Teknologi (Tech Stack)
+- **Backend:** Laravel 13 (PHP ^8.3)
+- **Frontend:** Blade + Tailwind CSS 4 + Vite
+- **Database:** SQLite (dev) / MySQL/MariaDB (produksi)
+- **Library / Package:** Laravel Sanctum (Bearer Token API), Eloquent ORM
+### 2. Fitur Utama & Modul
+- **Autentikasi & Otorisasi:** role `admin` (platform), `tenant` (operator kedai), `pelanggan` (file, no login); middleware `role`; Sanctum token untuk API
+- **Tenants:** CRUD kedai + platform monitor (`/admin/*`), settings modal (nama, prefix resi, kontak)
+- **Services & Orders:** CRUD tarif, catat order (walk-in / terdaftar, cek duplikat live), invoice `PREFIX-YYYYMMDD-urut`, struk + QR scan-to-track
+- **Operations:** antrean kerja, alur Received → Washing → Drying → Ironing → Ready → Completed
+- **Customers:** CRUD file pelanggan, cari nama/HP/ID (`CUST-001`), riwayat + total belanja, hapus dikunci bila berTransaksi
+- **Promos:** CRUD diskon rule-based (nama + persen + min qty kg/pcs + window tanggal), attach via form service, auto-apply di order
+- **Tracking publik:** lacak resi di `/` tanpa login, struk digital + riwayat tahap
+### 3. Skema Data Singkat
+- `tenants` (1 : N) `users`, `services`, `orders`
+- `users` (1 : N) `orders` (sebagai customer), (1 : N) `order_tracks` (sebagai updater)
+- `orders` (1 : N) `order_tracks`
+- `promos` (M : N) `services` via `promo_service`
 
+---
+
+## 🚀 Panduan Instalasi Lokal
 ```bash
+# Clone repository
+git clone git@github.com:avriyyy/praktikum_pemweb2-responsi-a5.git
+cd praktikum_pemweb2-responsi-a5
+# Install dependensi PHP & Node
 composer install
+npm install
+# Konfigurasi Environment
 cp .env.example .env
 php artisan key:generate
-# MySQL: sesuaikan DB_* di .env. SQLite: biarkan default.
+# Konfigurasi database di file .env, lalu migrasi & seed
 php artisan migrate --seed
+# Jalankan development server
 php artisan serve
+npm run dev
 ```
-
 Buka `http://localhost:8000`.
 
-## Akun pengujian
+---
 
+## 🔑 Akun Pengujian
 | Role | Email | Password |
 | ---- | ----- | -------- |
 | Admin (platform) | admin@laundrey.com via `/login` | password123 |
@@ -53,54 +80,34 @@ Buka `http://localhost:8000`.
 
 Daftar laundry baru via `/register`. Login pelanggan dinonaktifkan: file pelanggan dikelola counter.
 
-## API Documentation
+---
 
+## 📡 Dokumentasi API
 Base: `/api/v1`. Header wajib `Accept: application/json`. Auth: `Authorization: Bearer <token>`.
 
-| Method | Endpoint | Keterangan | Auth | Role |
-| ------ | -------- | ---------- | ---- | ---- |
-| POST | /api/v1/auth/register | Registrasi laundry (name+prefix+tenant) | No | Public |
-| POST | /api/v1/auth/login | Login & token (tenant/admin) | No | Public |
-| POST | /api/v1/auth/logout | Logout (hapus token aktif) | Yes | Tenant |
-| GET | /api/v1/services | Daftar layanan (cari=`cari`, paginasi `per_halaman`) | Yes | Tenant |
-| POST | /api/v1/services | Tambah layanan (+promo opsional) | Yes | Tenant |
-| PUT | /api/v1/services/{id} | Update layanan (+promo opsional) | Yes | Tenant |
-| DELETE | /api/v1/services/{id} | Hapus layanan | Yes | Tenant |
-| GET | /api/v1/orders | Daftar transaksi (filter `cari`, `status`, `payment_status`, `per_halaman`) | Yes | Tenant |
-| POST | /api/v1/orders | Buat transaksi + promo otomatis + invoice + track awal | Yes | Tenant |
-| GET | /api/v1/orders/{id} | Detail + tracks + promo | Yes | Tenant |
-| PUT | /api/v1/orders/{id} | Update transaksi | Yes | Tenant |
-| POST | /api/v1/orders/{id}/tracks | Update status + catat track | Yes | Tenant |
-| GET | /api/v1/track/{invoice} | Tracking publik | No | Public |
-| GET | /api/v1/promos | Daftar promo (cari=`cari`) | Yes | Tenant |
-| POST | /api/v1/promos | Buat promo (nama+persen+min qty/unit+tanggal) | Yes | Tenant |
-| GET | /api/v1/promos/{id} | Detail promo | Yes | Tenant |
-| DELETE | /api/v1/promos/{id} | Hapus promo | Yes | Tenant |
+| Method | Endpoint | Keterangan | Auth |
+| ------ | -------- | ---------- | ---- |
+| POST | /api/v1/auth/register | Registrasi laundry (name+prefix+tenant) | No |
+| POST | /api/v1/auth/login | Login & token (tenant/admin) | No |
+| POST | /api/v1/auth/logout | Logout (hapus token aktif) | Yes |
+| GET | /api/v1/services | Daftar layanan (`cari`, `per_halaman`) | Yes |
+| POST | /api/v1/services | Tambah layanan (+promo opsional) | Yes |
+| PUT | /api/v1/services/{id} | Update layanan (+promo opsional) | Yes |
+| DELETE | /api/v1/services/{id} | Hapus layanan | Yes |
+| GET | /api/v1/orders | Daftar transaksi (`cari`, `status`, `payment_status`, `per_halaman`) | Yes |
+| POST | /api/v1/orders | Buat transaksi + promo otomatis + invoice + track awal | Yes |
+| GET | /api/v1/orders/{id} | Detail + tracks + promo | Yes |
+| PUT | /api/v1/orders/{id} | Update transaksi | Yes |
+| POST | /api/v1/orders/{id}/tracks | Update status + catat track | Yes |
+| GET | /api/v1/track/{invoice} | Tracking publik | No |
+| GET | /api/v1/promos | Daftar promo (`cari`) | Yes |
+| POST | /api/v1/promos | Buat promo (nama+persen+min qty/unit+tanggal) | Yes |
+| GET | /api/v1/promos/{id} | Detail promo | Yes |
+| DELETE | /api/v1/promos/{id} | Hapus promo | Yes |
 
-Services, promos, customers: CRUD halaman penuh (tambah/ubah di halaman sendiri, tabel + tombol Edit/Hapus, tanpa inline form).
+Response sukses: `{sukses:true, pesan, data}`. Error: 401 token, 403 peran, 404 resi, 422 validasi (`galat`).
 
-Customer CRUD + live lookup (`/customers`, `/customers-lookup`) tersedia di web untuk tenant.
+---
 
-Response sukses: `{sukses:true, pesan, data}`. Error konsisten: 401 token, 403 peran, 404 resi, 422 validasi (`galat`).
-
-## Struktur
-
-- `database/migrations`: tenants, users/services/orders (+tenant_id), order_tracks
-- `app/Models`: Tenant, User (tenant), Service (tenant), Order (tenant, prefix invoice), OrderTrack
-- `app/Models`: User (HasApiTokens, orders, orderTracks), Service (orders), Order (customer, service, tracks), OrderTrack (order, updater)
-- `app/Http/Requests`: Login, Store/Update Service, Store/Update Order, StoreTrack
-- `app/Http/Resources`: Service, Order (nested customer/service/tracks), OrderTrack
-- `app/Http/Controllers/Api/V1`: Auth, Service, Order, Track
-- `app/Http/Middleware/EnsureRole.php` → alias `role`
-- `app/Http/Controllers/Web`: Auth (session), Dashboard, Order, Service, Operation, Track, Customer (CRUD + lookup)
-- `resources/views`: layouts/app, tracking, auth, dashboard, orders, services, operations, customers
-
-## Deployment
-
+## 🌐 Deployment
 Live: [https://a5.athafa.cloud](https://a5.athafa.cloud) (aaPanel, PHP 8.4, MySQL, Nginx, document root `public`, Let's Encrypt).
-
-Set `APP_URL`, `DB_*` MySQL, `php artisan migrate --force`, `npm run build`.
-
-## Video dokumentasi
-
-- Yudha (customers, promos, landing): TODO — isi link video individu.
