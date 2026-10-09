@@ -14,7 +14,7 @@
 ## 👥 Anggota Kelompok
 | No | Nama Lengkap | NIM | Shift Awal | Shift Akhir | Jobdesk / Kontribusi | Link Video Penjelasan |
 |---|---|---|---|---|---|---|
-| 1 | Nursyafika | H1H024023 | B | A | Fondasi, Auth & CRUD Tenants (branch `pika`) | [YouTube/Drive](https://...) |
+| 1 | Nursyafika | H1H024023 | B | A | Fondasi, Auth & CRUD Tenants (branch `pika`) | [Drive] (https://drive.google.com/drive/folders/1jLHCqjV0dtLwObougP6v51vDAhto6Aix) |
 | 2 | Bahtiar Rizqi Efendy | H1H024006 | C | A | CRUD Services & Orders, tracking & struk (branch `bahtiar`) | [YouTube](https://youtu.be/jHrep1pLPvo) |
 | 3 | Apriyudha | H1H024010 | C | A | CRUD Customers & Promos, landing (branch `yudha`) | [YouTube](https://youtu.be/hEKCiOz2g4) |
 
