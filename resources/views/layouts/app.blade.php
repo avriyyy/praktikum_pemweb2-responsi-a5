@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', function () {
 </div>
 </div>
 @auth
-@if(auth()->user()->role === 'tenant' && isset($layoutTenant) && $layoutTenant)
+@if(auth()->user()->role === 'tenant' && auth()->user()->tenant)
 <div id="settingsModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
 <div class="absolute inset-0 bg-ink/40" onclick="closeSettings()"></div>
 <div class="relative w-full max-w-md border border-line bg-white">
@@ -159,11 +159,11 @@ document.addEventListener('DOMContentLoaded', function () {
 <button onclick="closeSettings()" class="font-mono text-muted hover:text-ink">×</button>
 </div>
 <form method="POST" action="{{ route('settings.update') }}" class="flex flex-col gap-4 px-5 py-5">@csrf @method('PUT')
-<div><label class="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.18em] text-muted">Laundry name</label><input name="name" value="{{ old('name', $layoutTenant->name) }}" required class="h-10 w-full rounded-md border border-line-strong bg-white px-3 text-sm focus:border-ink focus:outline-none"></div>
+<div><label class="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.18em] text-muted">Laundry name</label><input name="name" value="{{ old('name', auth()->user()->tenant->name) }}" required class="h-10 w-full rounded-md border border-line-strong bg-white px-3 text-sm focus:border-ink focus:outline-none"></div>
 <div><label class="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.18em] text-muted">Owner name</label><input name="owner_name" value="{{ old('owner_name', auth()->user()->name) }}" required class="h-10 w-full rounded-md border border-line-strong bg-white px-3 text-sm focus:border-ink focus:outline-none"></div>
-<div><label class="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.18em] text-muted">Receipt prefix (3 capital letters)</label><input name="prefix" value="{{ old('prefix', $layoutTenant->prefix) }}" required maxlength="3" class="h-10 w-full rounded-md border border-line-strong bg-white px-3 font-mono text-sm uppercase focus:border-ink focus:outline-none"></div>
-<div><label class="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.18em] text-muted">Phone</label><input name="phone" value="{{ old('phone', $layoutTenant->phone) }}" class="h-10 w-full rounded-md border border-line-strong bg-white px-3 font-mono text-sm focus:border-ink focus:outline-none"></div>
-<div><label class="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.18em] text-muted">Address</label><textarea name="address" rows="2" class="w-full rounded-md border border-line-strong bg-white px-3 py-2 text-sm focus:border-ink focus:outline-none">{{ old('address', $layoutTenant->address) }}</textarea></div>
+<div><label class="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.18em] text-muted">Receipt prefix (3 capital letters)</label><input name="prefix" value="{{ old('prefix', auth()->user()->tenant->prefix) }}" required maxlength="3" class="h-10 w-full rounded-md border border-line-strong bg-white px-3 font-mono text-sm uppercase focus:border-ink focus:outline-none"></div>
+<div><label class="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.18em] text-muted">Phone</label><input name="phone" value="{{ old('phone', auth()->user()->tenant->phone) }}" class="h-10 w-full rounded-md border border-line-strong bg-white px-3 font-mono text-sm focus:border-ink focus:outline-none"></div>
+<div><label class="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.18em] text-muted">Address</label><textarea name="address" rows="2" class="w-full rounded-md border border-line-strong bg-white px-3 py-2 text-sm focus:border-ink focus:outline-none">{{ old('address', auth()->user()->tenant->address) }}</textarea></div>
 <p class="text-xs text-muted">New receipts use the new prefix. Old receipts keep theirs.</p>
 <div class="flex gap-2 border-t border-line pt-4"><button class="h-10 rounded-md bg-ink px-5 text-sm font-semibold text-white hover:bg-black">Save</button><button type="button" onclick="closeSettings()" class="h-10 rounded-md border border-line-strong px-5 text-sm font-medium hover:bg-paper">Cancel</button></div>
 </form>
